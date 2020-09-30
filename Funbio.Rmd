@@ -31,6 +31,9 @@ Sys.setenv(LANG = "en")
 
 ```{r ShapesRaster}
 
+#Download dos arquivos originais
+#https://1drv.ms/u/s!AhNWk0wxoDWOh7V9X7PqrQYjCta1Vg?e=3NAn5S
+
 setwd("D:\\Documentos\\OneDrive\\03 - Doutorado\\Funbio\\UCs") ### Mudar esse diretorio
 
 raster.list = list.files("Raster" ,pattern = "*.tif$") #Ou .TIF, .tiff, etc
