@@ -1,0 +1,217 @@
+---
+title: "RestauraPampa"
+author: "Lima, Edberto Moura"
+date: "29/09/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(maptools)
+library(rgdal)
+library(raster)
+
+
+library(rgdal)
+library(raster)
+library(ggplot2)
+library(ggthemes)
+library(rasterVis) #gplot
+library(ggspatial)
+library(landscapemetrics)
+library(landscapetools)
+library(SDMTools)
+
+Sys.setenv(LANG = "en")
+
+```
+
+## R Markdown
+
+
+```{r ShapesRaster}
+
+setwd("D:\\Downloads\\UCs\\Raster")
+
+raster.list = list.files(pattern = "*.tif$") #Ou .TIF, .tiff, etc
+rasters.anos = lapply(raster.list, raster) #Carregar rasters
+
+### Shapes
+
+shpUCs = readOGR("D:/Downloads/UCs/ucstodas.shp") ### Importar Shps
+proj4string(shpUCs) =  "+proj=longlat +datum=WGS84 +no_defs" ### definir sistema de projeção
+  
+  # "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+
+shpZonaAmort = readOGR("D:/Downloads/UCs/ZonaAmortecimento.shp") ### Importar Shps
+
+# Importar tabela de nome e cores
+tblCoresClasses = read.csv("D:/Downloads/UCs/MAPBIOMAS_Legenda_Cores.csv", sep = ";",  fileEncoding="UTF-8-BOM")
+
+# id = 1020 - PARQUE ESTADUAL DO ESPINILHO	
+# id = 2007 - RESERVA BIOLóGICA DO IBIRAPUITã	
+
+#Filtrar shp limites Ucs e Zona de Amortecimento
+
+shpUCsREBIO = shpUCs[shpUCs$ID_UC0 %in% 2007,]
+shpUCsPESP = shpUCs[shpUCs$ID_UC0 %in% 1020,]
+
+
+shpzonaUCsREBIO = shpZonaAmort[shpZonaAmort$Name %in% "Rebio Ibirapuita_ZA",]
+shpZonaUCsPESP = shpZonaAmort[shpZonaAmort$Name %in% "PE Espinilho_ZA",]
+
+
+```
+
+
+```{r REBIO}
+
+### Cortar e Reprojetar dados para UTM 
+
+rasters.corteREBIO = lapply(rasters.anos, function(x) crop(x, shpzonaUCsREBIO)) #Cortar rasters
+rasters.maskREBIO = lapply(rasters.corteREBIO, function(x) mask(x,shpzonaUCsREBIO)) 
+
+# rasters.reproject = lapply(rasters.mask, function(x) projectRaster(x,res=30, crs="+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs", method = "ngb")) 
+# shpUCsREBIO = spTransform(shpUCsREBIO,CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "))
+
+sRebio =  stack(rasters.maskREBIO)
+
+
+names(sRebio) = paste0(rep("mapaAno_",21),c(1985:2019))
+
+# for(i in 1:length(rasters.reproject)){
+#   writeRaster(s[[i]], filename = paste("..\\Processados\\",names(s[[i]]),".tif", sep=""))
+# } # Salvar rasters cortadas
+
+
+
+variable_names = lapply(1985:2019, function(x){
+  List = x
+})
+       
+names(variable_names) = names(sRebio)
+
+#### Plot LUCC#####
+
+variable_labeller <- function(variable,value){
+  return(variable_names[value])
+}
+
+# tblCoresClasses %>% 
+#     filter(ID %in% levels(as.factor(values(sRebio[[1]]))))
+
+vlabel =  (tblCoresClasses %>% 
+          filter(ID %in% levels(as.factor(values(sRebio)))))[,2]
+vPalettes =  (tblCoresClasses %>% 
+          filter(ID %in% levels(as.factor(values(sRebio)))))[,4]
+
+# levels(as.factor(values(s)))
+
+gplot(sRebio)+
+    geom_tile(aes(fill=factor(value, labels = vlabel)), alpha=0.8)+
+    scale_fill_manual(values = vPalettes,
+                    name= "Cobertura e uso do solo",na.translate = FALSE)+
+  geom_polygon(data=shpzonaUCsREBIO, aes(x=long, y=lat),
+                fill=NA,color="grey50", size=0.2)+
+  geom_polygon(data=shpUCsREBIO, aes(x=long, y=lat),
+                fill=NA,color="red", size=0.2)+
+    labs( y = NULL, x= NULL ) +
+  # annotation_scale(location = "br", 
+  #                  height = unit(0.2, "cm")) +
+  # annotation_north_arrow(location = "bl",
+  #                        which_north = "grid",
+  #                        style = north_arrow_fancy_orienteering, 
+  #                        height = unit(0.8, "cm"),
+  #                        width = unit(0.8, "cm"))+
+  ggtitle("RESERVA BIOLÓGICA DO IBIRAPUITÃ - RS", 
+          subtitle = "UMT Zone 22 datum WGS84") + #crs(s)
+  theme_bw()+
+  theme(panel.grid.major = element_line(color = gray(.5),
+                                        linetype = "dashed", size = 0.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank(),
+        legend.position="right")+
+   facet_wrap(~ variable, labeller = variable_labeller) +
+  coord_equal()
+
+
+```
+
+```{r PESP}
+
+### EStou com problema no CRS
+
+rasters.cortePESP = lapply(rasters.anos, function(x) crop(x, shpZonaUCsPESP)) #Cortar rasters
+rasters.maskPESP = lapply(rasters.cortePESP, function(x) mask(x,shpZonaUCsPESP)) 
+
+
+sPESP =  stack(rasters.maskPESP)
+
+names(sPESP) = paste0(rep("mapaAno_",21),c(1985:2019))
+
+# for(i in 1:length(rasters.reproject)){
+#   writeRaster(s[[i]], filename = paste("..\\Processados\\",names(s[[i]]),".tif", sep=""))
+# } # Salvar rasters cortadas
+
+
+variable_names = lapply(1985:2019, function(x){
+  List = x
+})
+       
+names(variable_names) = names(sPESP)
+
+
+#### Plot LUCC#####
+
+variable_labeller <- function(variable,value){
+  return(variable_names[value])
+}
+
+# tblCoresClasses %>% 
+#     filter(ID %in% levels(as.factor(values(sPESP[[1]]))))
+
+vlabel =  (tblCoresClasses %>% 
+          filter(ID %in% levels(as.factor(values(sPESP)))))[,2]
+vPalettes =  (tblCoresClasses %>% 
+          filter(ID %in% levels(as.factor(values(sPESP)))))[,4]
+
+
+gplot(sPESP)+
+  geom_tile(aes(fill=factor(value, labels = vlabel)), alpha=0.8)+
+  
+  scale_fill_manual(values = vPalettes,
+                    name= "Cobertura e uso do solo",na.translate = FALSE)+
+  geom_polygon(data=shpZonaUCsPESP, aes(x=long, y=lat),
+                fill=NA,color="grey50", size=0.2)+
+  geom_polygon(data=shpUCsPESP, aes(x=long, y=lat),
+                fill=NA,color="red", size=0.2)+
+  labs( y = NULL, x= NULL ) +
+  # annotation_scale(location = "br", 
+  #                   height = unit(0.2, "cm")) +
+  # annotation_north_arrow(location = "bl",
+  #                        which_north = "grid",
+  #                        style = north_arrow_fancy_orienteering, 
+  #                        height = unit(0.8, "cm"),
+  #                        width = unit(0.8, "cm"))+
+  ggtitle("PARQUE ESTADUAL DO ESPINILHO - RS", 
+          subtitle = "UMT Zone 22 datum WGS84") + #crs(s)
+  theme_bw()+
+  theme(panel.grid.major = element_line(color = gray(.5),
+                                        linetype = "dashed", size = 0.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank(),
+        legend.position="bottom")+
+   facet_wrap(~ variable, labeller = variable_labeller) +
+  coord_equal()
+
+```
+

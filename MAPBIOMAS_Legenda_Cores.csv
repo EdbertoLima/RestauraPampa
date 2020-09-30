@@ -1,0 +1,31 @@
+﻿ID;Classes_PT;Classes_EN;HexadecimalCode
+1;Floresta;Forest;#129912
+2;Floresta Natural;Natural Forest;#1F4423
+3;Formação Florestal;Forest Formation;#006400
+4;Formação Savânica;Savanna Formation;#32CD32
+5;Mangue;Mangrove;#687537
+9;Floresta Plantada;Forest Plantation;#935132
+10;Formação Natural não Florestal;Non Forest Natural Formation;#BBFCAC
+11;Campo Alagado e Área Pantanosa;Wetland;#45C2A5
+12;Formação Campestre;Grassland Formation;#B8AF4F
+32;Apicum;Salt Flat;#968c46
+29;Afloramento Rochoso;Rocky Outcrop;#FF8C00
+13;Outras Formações não Florestais;Other non Forest Formations;#BDB76B
+14;Agropecuária;Farming;#FFFFB2
+15;Pastagem;Pasture;#FFD966
+18;Agricultura;Agriculture;#E974ED
+19;Lavoura Temporária;Temporary Crop;#D5A6BD
+39;Soja;Soybean;#c59ff4
+20;Cana;Sugar cane;#C27BA0
+41;Outras Lavouras Temporárias;Other Temporary Crops;#e787f8
+36;Lavoura Perene;Perennial Crop;#f3b4f1
+21;Mosaico de Agricultura e Pastagem;Mosaic of Agriculture and Pasture;#FFEFC3
+22;Área não Vegetada;Non vegetated area;#EA9999
+23;Praia e Duna;Beach and Dune;#DD7E6B
+24;Infraestrutura Urbana;Urban Infrastructure;#af2a2a
+30;Mineração;Mining;#8A2BE2
+25;Outras Áreas não Vegetadas;Other non Vegetated Areas;#FF99FF
+26;Corpo D'água;Water;#0000FF
+33;Rio, Lago e Oceano;River, Lake and Ocean;#0000FF
+31;Aquicultura;Aquaculture;#29EEE4
+27;Não observado;Non Observed;#D5D5E5
