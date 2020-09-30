@@ -30,9 +30,8 @@ Sys.setenv(LANG = "en")
 
 
 ```{r ShapesRaster}
+### download arquivos drive https://1drv.ms/u/s!AhNWk0wxoDWOh7V9X7PqrQYjCta1Vg?e=3NAn5S
 
-#Download dos arquivos originais
-#https://1drv.ms/u/s!AhNWk0wxoDWOh7V9X7PqrQYjCta1Vg?e=3NAn5S
 
 setwd("D:\\Documentos\\OneDrive\\03 - Doutorado\\Funbio\\UCs") ### Mudar esse diretorio
 
@@ -41,13 +40,13 @@ raster.list = paste0(getwd(),"/Raster/",raster.list)
 rasters.anos = lapply(raster.list, raster) #Carregar rasters
 
 ### Shapes
+# crs Proj4js.defs["EPSG:4674"] = "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs";
 
 shpUCs = readOGR("shapes\\ucstodas.shp") ### Importar Shps
-proj4string(shpUCs) =  "+proj=longlat +datum=WGS84 +no_defs" ### definir sistema de projeção
-  
-  # "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-
 shpZonaAmort = readOGR("shapes\\ZonaAmortecimento.shp") ### Importar Shps
+#Reprojetar shpZonaAmort
+
+shpZonaAmort = spTransform(shpZonaAmort,CRS("+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs"))
 
 # Importar tabela de nome e cores
 tblCoresClasses = read.csv("MAPBIOMAS_Legenda_Cores.csv", sep = ";",  fileEncoding="UTF-8-BOM")
@@ -76,7 +75,9 @@ rasters.corteREBIO = lapply(rasters.anos, function(x) crop(x, shpzonaUCsREBIO)) 
 rasters.maskREBIO = lapply(rasters.corteREBIO, function(x) mask(x,shpzonaUCsREBIO)) 
 
 # rasters.reproject = lapply(rasters.mask, function(x) projectRaster(x,res=30, crs="+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs", method = "ngb")) 
-# shpUCsREBIO = spTransform(shpUCsREBIO,CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "))
+# shape.B = spTransform(shape,CRS("+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"))
+
+
 
 sRebio =  stack(rasters.maskREBIO)
 
@@ -121,15 +122,15 @@ gplot(sRebio)+
   geom_polygon(data=shpUCsREBIO, aes(x=long, y=lat),
                 fill=NA,color="red", size=0.2)+
     labs( y = NULL, x= NULL ) +
-  # annotation_scale(location = "br", 
-  #                  height = unit(0.2, "cm")) +
+   # annotation_scale(location = "br", 
+   #                 height = unit(0.2, "cm")) +
   # annotation_north_arrow(location = "bl",
   #                        which_north = "grid",
   #                        style = north_arrow_fancy_orienteering, 
   #                        height = unit(0.8, "cm"),
   #                        width = unit(0.8, "cm"))+
   ggtitle("RESERVA BIOLÓGICA DO IBIRAPUITÃ - RS", 
-          subtitle = "UMT Zone 22 datum WGS84") + #crs(s)
+          subtitle = "SIRGAS 2000 datum WGS84") + #crs(s)
   theme_bw()+
   theme(panel.grid.major = element_line(color = gray(.5),
                                         linetype = "dashed", size = 0.5),
@@ -149,7 +150,7 @@ ggsave(file="sRebio.png",
 
 ```{r PESP}
 
-### EStou com problema no CRS
+### Estou com problema no CRS da camada RASTER reprojeção não acontece
 
 rasters.cortePESP = lapply(rasters.anos, function(x) crop(x, shpZonaUCsPESP)) #Cortar rasters
 rasters.maskPESP = lapply(rasters.cortePESP, function(x) mask(x,shpZonaUCsPESP)) 
@@ -204,7 +205,7 @@ gplot(sPESP)+
   #                        height = unit(0.8, "cm"),
   #                        width = unit(0.8, "cm"))+
   ggtitle("PARQUE ESTADUAL DO ESPINILHO - RS", 
-          subtitle = "UMT Zone 22 datum WGS84") + #crs(s)
+          subtitle = "SIRGAS 2000") + #crs(s)
   guides(fill=guide_legend(ncol=3,  title.position = "top")) +
   theme_bw()+
   theme(panel.grid.major = element_line(color = gray(.5),
