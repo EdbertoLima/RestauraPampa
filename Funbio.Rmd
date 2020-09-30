@@ -9,21 +9,18 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
 library(sf)
 library(maptools)
-library(rgdal)
-library(raster)
-
-
 library(rgdal)
 library(raster)
 library(ggplot2)
 library(ggthemes)
 library(rasterVis) #gplot
 library(ggspatial)
-library(landscapemetrics)
 library(landscapetools)
-library(SDMTools)
+
 
 Sys.setenv(LANG = "en")
 
@@ -34,22 +31,23 @@ Sys.setenv(LANG = "en")
 
 ```{r ShapesRaster}
 
-setwd("D:\\Downloads\\UCs\\Raster")
+setwd("D:\\Documentos\\OneDrive\\03 - Doutorado\\Funbio\\UCs") ### Mudar esse diretorio
 
-raster.list = list.files(pattern = "*.tif$") #Ou .TIF, .tiff, etc
+raster.list = list.files("Raster" ,pattern = "*.tif$") #Ou .TIF, .tiff, etc
+raster.list = paste0(getwd(),"/Raster/",raster.list)
 rasters.anos = lapply(raster.list, raster) #Carregar rasters
 
 ### Shapes
 
-shpUCs = readOGR("D:/Downloads/UCs/ucstodas.shp") ### Importar Shps
+shpUCs = readOGR("shapes\\ucstodas.shp") ### Importar Shps
 proj4string(shpUCs) =  "+proj=longlat +datum=WGS84 +no_defs" ### definir sistema de projeção
   
   # "+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
-shpZonaAmort = readOGR("D:/Downloads/UCs/ZonaAmortecimento.shp") ### Importar Shps
+shpZonaAmort = readOGR("shapes\\ZonaAmortecimento.shp") ### Importar Shps
 
 # Importar tabela de nome e cores
-tblCoresClasses = read.csv("D:/Downloads/UCs/MAPBIOMAS_Legenda_Cores.csv", sep = ";",  fileEncoding="UTF-8-BOM")
+tblCoresClasses = read.csv("MAPBIOMAS_Legenda_Cores.csv", sep = ";",  fileEncoding="UTF-8-BOM")
 
 # id = 1020 - PARQUE ESTADUAL DO ESPINILHO	
 # id = 2007 - RESERVA BIOLóGICA DO IBIRAPUITã	
@@ -103,16 +101,17 @@ variable_labeller <- function(variable,value){
 # tblCoresClasses %>% 
 #     filter(ID %in% levels(as.factor(values(sRebio[[1]]))))
 
-vlabel =  (tblCoresClasses %>% 
+vlabelREBIO =  (tblCoresClasses %>% 
           filter(ID %in% levels(as.factor(values(sRebio)))))[,2]
-vPalettes =  (tblCoresClasses %>% 
+vPalettesREBIO =  (tblCoresClasses %>% 
           filter(ID %in% levels(as.factor(values(sRebio)))))[,4]
 
 # levels(as.factor(values(s)))
 
+
 gplot(sRebio)+
-    geom_tile(aes(fill=factor(value, labels = vlabel)), alpha=0.8)+
-    scale_fill_manual(values = vPalettes,
+    geom_tile(aes(fill=factor(value, labels = vlabelREBIO)), alpha=0.8)+
+    scale_fill_manual(values = vPalettesREBIO,
                     name= "Cobertura e uso do solo",na.translate = FALSE)+
   geom_polygon(data=shpzonaUCsREBIO, aes(x=long, y=lat),
                 fill=NA,color="grey50", size=0.2)+
@@ -139,6 +138,8 @@ gplot(sRebio)+
         legend.position="right")+
    facet_wrap(~ variable, labeller = variable_labeller) +
   coord_equal()
+ggsave(file="sRebio.png",
+        width = 17, height = 27, units = "cm",dpi = 300)
 
 
 ```
@@ -176,16 +177,16 @@ variable_labeller <- function(variable,value){
 # tblCoresClasses %>% 
 #     filter(ID %in% levels(as.factor(values(sPESP[[1]]))))
 
-vlabel =  (tblCoresClasses %>% 
+vlabelPESP =  (tblCoresClasses %>% 
           filter(ID %in% levels(as.factor(values(sPESP)))))[,2]
-vPalettes =  (tblCoresClasses %>% 
+vPalettesPESP =  (tblCoresClasses %>% 
           filter(ID %in% levels(as.factor(values(sPESP)))))[,4]
 
 
 gplot(sPESP)+
-  geom_tile(aes(fill=factor(value, labels = vlabel)), alpha=0.8)+
+  geom_tile(aes(fill=factor(value, labels = vlabelPESP)), alpha=0.8)+
   
-  scale_fill_manual(values = vPalettes,
+  scale_fill_manual(values = vPalettesPESP,
                     name= "Cobertura e uso do solo",na.translate = FALSE)+
   geom_polygon(data=shpZonaUCsPESP, aes(x=long, y=lat),
                 fill=NA,color="grey50", size=0.2)+
@@ -201,6 +202,7 @@ gplot(sPESP)+
   #                        width = unit(0.8, "cm"))+
   ggtitle("PARQUE ESTADUAL DO ESPINILHO - RS", 
           subtitle = "UMT Zone 22 datum WGS84") + #crs(s)
+  guides(fill=guide_legend(ncol=3,  title.position = "top")) +
   theme_bw()+
   theme(panel.grid.major = element_line(color = gray(.5),
                                         linetype = "dashed", size = 0.5),
@@ -212,6 +214,8 @@ gplot(sPESP)+
         legend.position="bottom")+
    facet_wrap(~ variable, labeller = variable_labeller) +
   coord_equal()
+ggsave(file="sPESP.png",
+        width = 17, height = 27, units = "cm",dpi = 300)
 
 ```
 
