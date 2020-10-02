@@ -42,7 +42,7 @@ rasters.anos = lapply(raster.list, raster) #Carregar rasters
 ### Shapes
 # crs Proj4js.defs["EPSG:4674"] = "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs";
 
-shpUCs = readOGR("shapes\\ucstodas.shp") ### Importar Shps
+shpUCs = readOGR("shapes\\ucstodasproje.shp") ### Importar Shps
 shpZonaAmort = readOGR("shapes\\ZonaAmortecimento.shp") ### Importar Shps
 #Reprojetar shpZonaAmort
 
@@ -106,8 +106,10 @@ variable_labeller <- function(variable,value){
 #     filter(ID %in% levels(as.factor(values(sRebio[[1]]))))
 
 vlabelREBIO =  (tblCoresClasses %>% 
+                  arrange(ID) %>%  
           filter(ID %in% levels(as.factor(values(sRebio)))))[,2]
 vPalettesREBIO =  (tblCoresClasses %>% 
+                     arrange(ID) %>% 
           filter(ID %in% levels(as.factor(values(sRebio)))))[,4]
 
 # levels(as.factor(values(s)))
@@ -182,16 +184,18 @@ variable_labeller <- function(variable,value){
 #     filter(ID %in% levels(as.factor(values(sPESP[[1]]))))
 
 vlabelPESP =  (tblCoresClasses %>% 
-          filter(ID %in% levels(as.factor(values(sPESP)))))[,2]
+               arrange(ID) %>% 
+               filter(ID %in% levels(as.factor(values(sPESP)))))[,2] 
+    
 vPalettesPESP =  (tblCoresClasses %>% 
+                  arrange(ID) %>% 
           filter(ID %in% levels(as.factor(values(sPESP)))))[,4]
 
 
+
 gplot(sPESP)+
-  geom_tile(aes(fill=factor(value, labels = vlabelPESP)), alpha=0.8)+
-  
-  scale_fill_manual(values = vPalettesPESP,
-                    name= "Cobertura e uso do solo",na.translate = FALSE)+
+  geom_tile(aes(fill=factor(value, labels = vlabelPESP)), alpha=0.8)+ #, labels = vlabelPESP
+   scale_fill_manual(values = vPalettesPESP, name= "Cobertura e uso do solo",na.translate = FALSE)+
   geom_polygon(data=shpZonaUCsPESP, aes(x=long, y=lat),
                 fill=NA,color="grey50", size=0.2)+
   geom_polygon(data=shpUCsPESP, aes(x=long, y=lat),
@@ -205,7 +209,7 @@ gplot(sPESP)+
   #                        height = unit(0.8, "cm"),
   #                        width = unit(0.8, "cm"))+
   ggtitle("PARQUE ESTADUAL DO ESPINILHO - RS", 
-          subtitle = "SIRGAS 2000") + #crs(s)
+          subtitle = "SIRGAS 2000 datum WGS84") + #crs(s)
   guides(fill=guide_legend(ncol=3,  title.position = "top")) +
   theme_bw()+
   theme(panel.grid.major = element_line(color = gray(.5),
